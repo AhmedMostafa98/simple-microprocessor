@@ -1,0 +1,8 @@
+[Inputs]
+MicroReset
+=OPcode[3:0]=
+[Outputs]
+RPC
+RRF
+=CtrlWord[15:0]=
+[BiDir]

@@ -1,0 +1,70 @@
+//This segment intializes the LCD
+//We select the 8 bit mode of communtcation with the LCD with 2 rows
+//We disable the cursor then clear the LCD to be ready to receive data and commands
+//Push and pop R0,R7 only
+//Used R0 in calculations and R6 to access the RAM
+//Total delays of 3 LCD calls (12ms), no local delays used
+
+xLCDINIT: NOP
+//Pushing R0
+SUB R6,R6,R6
+SW R0,R6
+//Pushing R7
+SUB R6,R6,R6
+ADDI R6,R6,07
+SW R7,R6
+//
+//Choosing Two lines, Eight bit mode is done with the command 56
+//
+//R0 = 56
+SUB R0,R0,R0
+ADDI R0,R0,30
+ADDI R0,R0,26
+//Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+//--------------------------CALL LCD COMMAND -----------------------------------
+JAL xSendCmd
+//
+//Turning the cursor off is done with command 12
+//To turn on the cursor replace this with command 14
+//
+//R0 = 12
+SUB R0,R0,R0
+ADDI R0,R0,12
+//Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+//--------------------------CALL LCD COMMAND -----------------------------------
+JAL xSendCmd
+//
+//Clearing the LCD is done with command 1
+//
+//R0 = 1
+SUB R0,R0,R0
+ADDI R0,R0,01
+//Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+//--------------------------CALL LCD COMMAND -----------------------------------
+JAL xSendCmd
+//
+//LCD is fully initiallized 
+//Popping R0
+SUB R6,R6,R6
+LW R0,R6
+//Popping R7
+SUB R6,R6,R6
+ADDI R6,R6,07
+LW R7,R6
+
+//Return to main
+JR R7
+
+
+
+
+

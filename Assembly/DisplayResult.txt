@@ -1,0 +1,574 @@
+// This segment get the result from Ram14 then seperates it into 5 digits and prints them to the bottom right of the LCD
+//Instead of dividing by 10, we calculate the remainder first by multiplying by approx 0.9 using a series of SLL(multiplying by 2) and SRL(dividing by 2)
+//----THIS SEGMENT WILL CHANGE R0~4 VALUES AND WILL NOT RETURN THEM TO THEIR INITIAL VALUES-----
+//----INSTEAD R0-R4 WILL RETURN WITH ZERO VALUES----
+//Used Ram14-result , Ram12-data , Ram13-command , Ram0~7- Push and Pop registers
+//Used R0,R1,R2,R3,R4 in calculations and R6 to access the RAM
+//Total delays of 10 LCD calls (40 ms), no local delays used
+
+xDISPLAYRESULT: NOP
+//Push R7 only, Needs to be pushed so its value can be retained to return to main after execution
+SUB R6,R6,R6
+ADDI R6,R6,07
+SW R7,R6
+
+//Clearing R0~6 except R5
+SUB R0,R0,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+SUB R4,R4,R4
+SUB R6,R6,R6
+
+//Get result from Ram14 in R0
+ADDI R6,R6,14
+LW R0,R6
+//save result in R4 too
+ADD R4,R4,R0
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 16 and repeat the whole code 4 more times
+// row 2 col 16 is command 207 :(
+//
+//R2 = 207
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,21
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          FIRST DIVISION IS DONE				 	//
+//			    1 number is displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+// Put the result of division in R0 and R4, from R1 and repeat the whole division 3 times but print in 206~203
+SUB R4,R4,R4
+ADD R4,R1,R4
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//
+//
+//Now repeating the division -- 2nd time
+//
+//
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 15 and repeat the whole code 4 more times
+// row 2 col 16 is command 206 
+//
+//R2 = 206
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,20
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          SECOND DIVISION IS DONE				 	//
+//			    2 numbers are displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//  Put the result of division in R0 and R4, from R1 and repeat the whole division 2 more times but print in 205~203
+SUB R4,R4,R4
+ADD R4,R1,R4
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//
+//
+//Now repeating the division -- 3rd time
+//
+//
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+LW R0,R6
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 14 and repeat the code 2 more times
+// row 2 col 16 is command 206 
+//
+//R2 = 205
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,19
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//  Put the result of division in R0 and R4, from R1 and repeat the whole division 3 more times but print in 205~203
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          THIRED DIVISION IS DONE				 	//
+//			    3 numbers are displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//  Put the result of division in R0 and R4, from R1 and repeat the whole division 1 more time but print in 204~203
+SUB R4,R4,R4
+ADD R4,R1,R4
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//
+//
+//Now repeating the division -- 4th time
+//
+//
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+LW R0,R6
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 13
+// row 2 col 13 is command 204 
+//
+//R2 = 204
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,18
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          FOURTH DIVISION IS DONE				 	//
+//			    4 numbers are displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//Now the last digit to print is the result of dividing by 10 for 4 times, dividing by 10,000, which is stored in R1
+//Print in row 2 col 12 
+//R2 = 203
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,17
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R1 to ascii
+ADDI R1,R1,30
+ADDI R1,R1,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R1,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          	5 Numbers are displayed				 	//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//Clearing the values of R0~4
+SUB R0,R0,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+SUB R4,R4,R4
+
+//Pop R7 to return to main
+SUB R6,R6,R6
+ADDI R6,R6,07
+LW R7,R6
+
+//return back to main
+JR R7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

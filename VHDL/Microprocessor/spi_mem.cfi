@@ -1,0 +1,11 @@
+# PROMGEN: Xilinx Prom Generator P.20131013
+# Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+
+SOFTWARE_VERSION P.20131013
+DATE            04/22/2019 - 00:23
+SOURCE          C:\Users\Tefa\Desktop\final_design\Microprocessor\spi_mem.mcs
+DEVICE          4096K
+DATA_WIDTH      1
+FILL_DATA       0xFF
+SIGNATURE       0x3A9AE31C
+START_ADDRESS   0x00000000 END_ADDRESS 0x0005327B DIRECTION_UP   "C:/Users/Tefa/Desktop/final_design/Microprocessor/microprocessor.bit" 6slx9tqg144

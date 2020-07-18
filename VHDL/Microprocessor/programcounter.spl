@@ -1,0 +1,8 @@
+[Inputs]
+clock
+reset
+LD
+=load_pc[15:0]=
+[Outputs]
+=pc_out[15:0]=
+[BiDir]

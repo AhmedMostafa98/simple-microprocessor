@@ -1,0 +1,101 @@
+##UC FILE 
+##Commenting in UC FILE IS WITH HASHTAGS , not -- 
+
+#pin2ucf - Sat Apr 20 11:48:33 2019
+#The following constraints were newly added
+##################################################
+## INPUT_Port as bits by bit in the same order as 
+#### mips.vhd higher module input entity
+#### first three bits comming from keypad are here.
+NET "Data_in[0]" LOC = P32;
+NET "Data_in[1]" LOC = P30;
+NET "Data_in[2]" LOC = P29;
+NET "Data_in[3]" LOC = P27;
+##NET "Clock" LOC = P55;
+NET "Reset" LOC = P80; 
+##OUT_PORT###################
+NET "Data_out[0]" LOC = P5; #D0 , First 8 bits coming from LCD  
+NET "Data_out[1]" LOC = P6; #D1 
+NET "Data_out[2]" LOC = P7; #D2
+NET "Data_out[3]" LOC = P8; #D3
+NET "Data_out[4]" LOC = P9; #D4
+NET "Data_out[5]" LOC = P10; #D5
+NET "Data_out[6]" LOC = P11; #D6
+NET "Data_out[7]" LOC = P12; #D7
+NET "Data_out[8]" LOC = P2; #LCD_ENABLE
+NET "Data_out[9]" LOC = P26; #RS
+NET "Data_out[10]" LOC = P82; #NOT_USED
+NET "Data_out[11]" LOC = P81; #NOT_USED
+NET "Data_out[12]" LOC = P79; #Col_0_Keyboard Columns
+NET "Data_out[13]" LOC = P78; #Col_1
+NET "Data_out[14]" LOC = P35;  #Col_2
+NET "Data_out[15]" LOC = P33;  #Col_3
+############################################################
+#### unused pins #must be prohibit to use to avoid noise coming at them.
+CONFIG PROHIBIT = P1;       #p1
+CONFIG PROHIBIT = P14;      #p14
+CONFIG PROHIBIT = P15;      #p15
+CONFIG PROHIBIT = P16;      #p16
+CONFIG PROHIBIT = P17;      #p17
+CONFIG PROHIBIT = P21;      #p21
+CONFIG PROHIBIT = P22;      #p22 
+CONFIG PROHIBIT = P23;      #p23 
+CONFIG PROHIBIT = P24;      #p24
+CONFIG PROHIBIT = P34;         #p34 
+CONFIG PROHIBIT = P40;          #p40
+CONFIG PROHIBIT = P41;          #p41
+CONFIG PROHIBIT = P43;          #p43
+CONFIG PROHIBIT = P44;          #p44
+CONFIG PROHIBIT = P45;          #p45
+CONFIG PROHIBIT = P46;          #p46
+CONFIG PROHIBIT = P47; #p47
+CONFIG PROHIBIT = P48;          #p48
+CONFIG PROHIBIT = P50;  #p50
+CONFIG PROHIBIT = P51;  #p51
+CONFIG PROHIBIT = P56;   #p56
+CONFIG PROHIBIT = P57;         #p57
+CONFIG PROHIBIT = P58;         #p58
+CONFIG PROHIBIT = P59;         #p59
+CONFIG PROHIBIT = P61;    #p61
+CONFIG PROHIBIT = P62;    #p62
+CONFIG PROHIBIT = P66;      #p66
+CONFIG PROHIBIT = P67;       #p67
+CONFIG PROHIBIT = P74;   #p74
+CONFIG PROHIBIT = P75;       #p75
+CONFIG PROHIBIT = P84;       #p84
+CONFIG PROHIBIT = P85;       #p85
+CONFIG PROHIBIT = P87; #p87
+CONFIG PROHIBIT = P88;       #p88
+CONFIG PROHIBIT = P92;       #p92
+CONFIG PROHIBIT = P93; #p93
+CONFIG PROHIBIT = P94;      #p94
+CONFIG PROHIBIT = P95;      #p95
+CONFIG PROHIBIT = P104;         #p104
+CONFIG PROHIBIT = P111;        #p111
+CONFIG PROHIBIT = P112;        #p112
+CONFIG PROHIBIT = P114;        #p114
+CONFIG PROHIBIT = P115;        #p115
+CONFIG PROHIBIT = P116;        #p116
+CONFIG PROHIBIT = P117;        #p117
+CONFIG PROHIBIT = P118;        #p118
+CONFIG PROHIBIT = P119;        #p119
+CONFIG PROHIBIT = P120;        #p120
+CONFIG PROHIBIT = P123;      #p123
+CONFIG PROHIBIT = P124;      #p124
+CONFIG PROHIBIT = P126;      #p126
+CONFIG PROHIBIT = P127;      #p127
+CONFIG PROHIBIT = P131;      #p131
+CONFIG PROHIBIT = P132;      #p132
+CONFIG PROHIBIT = P133;      #p133
+CONFIG PROHIBIT = P134;      #p134
+CONFIG PROHIBIT = P143;         #p143
+
+
+#########################################
+#Created by Constraints Editor (xc6slx45t-fgg484-3) - 2019/04/20
+NET "clock" TNM_NET = clock;
+TIMESPEC TS_clock = PERIOD "clock" 20 ns HIGH 50%;
+
+
+###### VOLTAGESSSSSS
+###### RESET OF PINS 

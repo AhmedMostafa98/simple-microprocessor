@@ -1,0 +1,7 @@
+[Inputs]
+sel
+=w0[2:0]=
+=w1[2:0]=
+[Outputs]
+=f[2:0]=
+[BiDir]

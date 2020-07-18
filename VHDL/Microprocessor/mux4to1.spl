@@ -1,0 +1,7 @@
+[Inputs]
+S1
+S2
+=A[2:0]=
+[Outputs]
+=O[2:0]=
+[BiDir]

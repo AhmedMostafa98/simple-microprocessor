@@ -1,0 +1,221 @@
+// FUNCTION :SENDING DATA TO LCD
+// REGISTERS USED :R1,R2,R3,R4,R5,R6(FOR ADRESSES)
+// MEMORY ADRESSES USED :0,1,2,3,4,5 (FOR PUSHING REGISTERS) AND 12 (FOR LOADING DATA)
+// NUMBER OF DELAYS :4 DELAYS (TOTAL TIME OF DELAY :4MS)
+//
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+xSENDDATA:NOP
+// //////////////////////////////////////   PUSHING THE REGISTERS  //////////////////////////////////////////////
+//
+//   
+SUB R6,R6,R6  
+SW R0,R6
+// ----PUSHING RO IN THE RAM (R6=0)---- 
+ADDI R6,R6,01 
+SW R1,R6 
+// ----PUSHING R1 IN THE RAM (R6=1)----
+ADDI R6,R6,01  
+SW R2,R6 
+// ----PUSHING R2 IN THE RAM (R6=2)----
+ADDI R6,R6,01  
+SW R3,R6 
+// ----PUSHING R3 IN THE RAM (R6=3)----
+ADDI R6,R6,01  
+SW R4,R6 
+// ----PUSHING R4 IN THE RAM (R6=4)----
+ADDI R6,R6,01  
+SW R5,R6 
+// ----PUSHING R5 IN THE RAM (R6=5)----
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+// //////////////////////////////////////////// PUTTING RS = 1 /////////////////////////////////////////////////
+//
+//
+SUB R1,R1,R1  
+// ---- R1=0 ---- 
+ADDI R1,R1,01
+// ---- R1=1 ----
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+// ---- R1=100000000 (BIT(9) = 1 FOR (RS) ) ----
+// //////////////////////////////////////  PUTTING DATA IN OUTPUT PORT /////////////////////////////
+//
+//
+SUB R6,R6,R6 
+ADDI R6,R6,12
+// ---- PUTTING THE ADRESS OF DATA (12) IN RAM IN R6 ---- 
+SUB R2,R2,R2 
+LW R2,R6
+// ---- LOADING DATA FROM RAM TO R2 ----
+OR R1,R2,R1 
+// ---- PUTTING THE DATA IN R1 ----
+OUT R1 
+// ---- (RS) (BIT 9) EQUALS 1, (LCD ENABLE) (BIT 8) EQUALS 0 , AND DATA D7....D0 IS ON OUTPUTPORT ----
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOPSD1:BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOPSD1
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+// //////////////////////////////////////  PUTTING LCD ENABLE = 1 //////////////////////////////////
+//
+//
+SUB R2,R2,R2  
+// ---- R2=0 ---- 
+ADDI R2,R2,01
+// ---- R2=1 ----
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2
+// ---- R2=100000000 (BIT(8) = 1 FOR (LCD ENABLE) ) ----
+OR R1,R2,R1
+// ---- R1=11-8BitsData (BIT(8) (LCD ENABLE), BIT(9) (RS) EQUALS 1 )
+OUT R1
+// ---- (RS) (BIT 9) , (LCD ENABLE) (BIT 8) EQUALS 1 , AND DATA D7....D0 IS ON OUTPUTPORT ----
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOPSD2:BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOPSD2
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING LCD ENABLE = 0 //////////////////////////////////
+//
+//
+SUB R2,R2,R2 
+ADDI R2,R2,23
+// ---- R2= 0000000000010111 ----
+SLL R2,R2
+SLL R2,R2
+SLL R2,R2
+SLL R2,R2
+SLL R2,R2
+// ---- R2 = 0000001011100000 ----
+SUB R3,R3,R3
+ADDI R3,R3,31
+// ---- R3 = 0000000000011111 ----
+OR R2,R3,R2
+// ---- R2 = 0000001011100000 ----
+//                OR
+// ---- R3 = 0000000000011111 ----
+// ---- R2 = 0000001011111111 ----
+// ---- R2 HAS THE VALUE 0000001011111111 (TO KEEP THE VALUE OF (DATA) AND (RS) AND MAKE (LCD ENABLE) EQUALS ZERO )
+AND R1,R1,R2
+// ----NOW (LCD ENABLE = 0) AND (RS) AND (DATA) IS KEPT SAFE ----
+OUT R1
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOPSD3:BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOPSD3
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+// //////////////////////////////////////  POPPING REGISTERS ///////////////////////////////////////
+//
+//
+SUB R6,R6,R6  
+LW R0,R6
+// ----POPING RO IN THE RAM (R6=0)----
+ADDI R6,R6,01 
+LW R1,R6 
+// ----POPING R1 IN THE RAM (R6=1)----
+ADDI R6,R6,01  
+LW R2,R6 
+// ----POPING R2 IN THE RAM (R6=2)----
+ADDI R6,R6,01  
+LW R3,R6 
+// ----POPING R3 IN THE RAM (R6=3)----
+ADDI R6,R6,01  
+LW R4,R6 
+// ----POPING R4 IN THE RAM (R6=4)----
+ADDI R6,R6,01  
+LW R5,R6 
+// ---POPING R5 IN THE RAM (R6=5)----
+JR R7

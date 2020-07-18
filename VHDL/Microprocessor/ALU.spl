@@ -1,0 +1,8 @@
+[Inputs]
+=Alu_inputA[15:0]=
+=Alu_inputB[15:0]=
+=Alu_control[2:0]=
+[Outputs]
+Zero
+=Alu_result[15:0]=
+[BiDir]

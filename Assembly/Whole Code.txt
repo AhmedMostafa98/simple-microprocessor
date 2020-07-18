@@ -1,0 +1,1905 @@
+JAL xLCDINIT
+//welcome to lcd
+//R0,R6......12,13
+//ONE DELAY FOR 2 SEC
+
+//SEND CURSOR POSITION
+SUB R6,R6,R6
+ADDI R6,R6,13
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,8
+SW R0,R6
+JAL xSENDCMD
+//SEND ASCII OF W=87
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,25
+//SEND DATA TO RAM
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+JAL xSENDDATA
+//SEND ASCII OF E=69
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,07
+SW R0,R6
+JAL xSENDDATA
+//SEND ASCII OF L=76
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,14
+JAL xSENDDATA
+//SEND ASCII OF C=67
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,05
+SW R0,R6
+JAL xSENDDATA
+//SEND ASCII OF O=79
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,17
+SW R0,R6
+JAL xSENDDATA
+//SEND ASCII OF M=77
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,15
+SW R0,R6
+JAL xSENDDATA
+//SEND ASCII OF E=69
+SUB R0,R0,R0
+ADDI R0,R0,31
+ADDI R0,R0,31
+ADDI R0,R0,07
+SW R0,R6
+JAL xSENDDATA
+
+// //////////////////////////////////////   DELAY 1S  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+SUB R1,R1,R1
+ADDI R1,R1,31
+//R1 = 0000000000011111
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+// R1 = 0000001111100000
+ORI R1,R1,31
+// R1 = 0000001111111111 (1023 decimal)
+xLOOP2: BEQ R1,R4,05
+SUB R1,R1,R5
+//if R1 is subtracted 1000 times then jumb by 5 to go out
+xLOOP1: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP1
+J xLOOP2
+
+// DELAY = 1000 * 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+
+SUB R0,R0,R0
+ADDI R0,R0,01
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+JAL #COMMAND
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+//READING ORDERS
+//R1,R2,R4,R6 ....... 09,08,14
+//NONE
+
+xSTART: SUB R4,R4,R4
+//MAKING R4 =0 .. RESULT REGISTER
+//JUMP TO KEYPAD PART TO CHECK KEY PRESSING ..... K1 WILL BE REPLACED 
+xK1: JAL xkeypad
+
+//READ FLAG CHECK
+//MOV R6,09 ADDRESS READ FLAG
+SUB R6,R6,R6
+ADDI R6,R6,09
+//PUT READ FLAG AT R2
+LW R2,R6
+//MOV R1,01 T0 COMPARE WITH IT
+SUB R1,R1,R1
+ADDI R1,R1,01
+//IF READ FLAG =1 JUMP 2 STEPS .. IF NOT JUMP TO K1 WHICH JUMPS TO KEYPAD PART
+BEQ R2,R1,01
+J xK1
+//READ FLAG = 0
+SUB R2,R2,R2
+SW R2,R6
+//FIRST ORDER
+//MOV R6,08 ADDRESS KEY PRESSED
+SUB R6,R6,R6
+ADDI R6,R6,08
+LW R2,R6
+//MOV R1,00 TO COMPARE WITH IT
+SUB R1,R1,R1
+//SHIFT R2 RIGHT .. IF IT WAS THE FIRST ORDER , IT WILL BE ZERO
+SRL R2
+//IF R2=0 JUMP 2 STEPS .. IF NOT JUMP TO THE SECOND CHECK
+BEQ R2,R1,01
+J xSEC
+//ADD THE FIRST ORDER COST TO R4 WHICH IS THE RESULT
+ADDI R4,R4,20
+J xK1
+//SECOND ORDER
+xSEC: SRL R2
+BEQ R2,R1,01
+J xTHIRD 
+ADDI R4,R4,25
+J xK1
+//THIRD ORDER
+xTHIRD: SRL R2
+BEQ R2,R1,01
+J xFOURTH 
+ADDI R4,R4,15
+J xK1
+//FOURTH ORDER
+xFOURTH: SRL R2
+BEQ R2,R1,01
+J xFIFTH 
+ADDI R4,R4,30
+J xK1
+//FIFTH ORDER
+xFIFTH: SRL R2
+BEQ R2,R1,01
+J xSIX 
+ADDI R4,R4,25
+J xK1
+//SIXTH ORDER
+xSIX: SRL R2
+BEQ R2,R1,01
+J xSEV 
+ADDI R4,R4,25
+J xK1
+//SEVENTH ORDER
+xSEV: SRL R2
+BEQ R2,R1,01
+J xEIGHT 
+ADDI R4,R4,20
+J xK1
+//EIGHTH ORDER
+xEIGHT: SRL R2
+BEQ R2,R1,01
+J xNINTH 
+ADDI R4,R4,10
+J xK1
+//NINTH ORDER
+xNINTH: SRL R2
+BEQ R2,R1,01
+J xTENTH 
+ADDI R4,R4,15
+J xK1
+//TENTH ORDER
+xTENTH: SRL R2
+BEQ R2,R1,01
+J xEXIT 
+ADDI R4,R4,20
+J xK1
+//EXIT MEANS PRINTING COST
+xEXIT: SRL R2
+BEQ R2,R1,01
+J xK1 
+//MOV R6,14 ADDRESS RESULT 
+SUB R6,R6,R6
+ADDI R6,R6,14
+SW R4,R6
+JAL xDISPLAYRESULT
+
+xRESETCHECK: JAL xkeypad
+//READ FLAG CHECK
+//MOV R6,09 ADDRESS READ FLAG
+SUB R6,R6,R6
+ADDI R6,R6,09
+//PUT READ FLAG AT R2
+LW R2,R6
+//MOV R1,01 To COMPARE WITH IT
+SUB R1,R1,R1
+ADDI R1,R1,01
+//IF READ FLAG =1 JUMP 2 STEPS 
+//IF NOT, JUMP TO xRESETCHECK WHICH JUMPS TO KEYPAD PART
+BEQ R2,R1,01
+J xRESETCHECK
+J xSTART
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+///////////////        KEYPAD      ///////////////
+///////////////////////////                   PUSHING THE REGISTERS        //////////////////////////////////////////    
+xkeypad:SUB R6,R6,R6  
+SW R0,R6
+//PUSHING RO IN THE RAM (R6=0) 
+ADDI R6,R6,01 
+SW R1,R6 
+//PUSHING R1 IN THE RAM (R6=1)
+ADDI R6,R6,01  
+SW R2,R6 
+//PUSHING R2 IN THE RAM (R6=2)
+ADDI R6,R6,01  
+SW R3,R6 
+//PUSHING R3 IN THE RAM (R6=3)
+ADDI R6,R6,01  
+SW R4,R6 
+//PUSHING R4 IN THE RAM (R6=4)
+ADDI R6,R6,01  
+SW R5,R6 
+//PUSHING R5 IN THE RAM (R6=5)
+//////////               CHECK READFLAG             //////////////////
+xcheckflag:SUB R6,R6,R6
+ADDI R6,R6,09//R6=9
+LW R0,R6
+SUB R1,R1,R1
+BEQ R1,R0,02
+J xstartofdecoding
+///////////// SPECIFY WHICH STATE SHOUID ENTER /////////
+SUB R6,R6,R6
+ADDI R6,R6,31
+ADDI R6,R6,20//R6=51
+LW R0,R6 //R0=STATE
+SUB R1,R1,R1
+BNE R1,R0,01
+J xstartofstate0 ///STATE0
+SUB R1,R1,R1
+ADDI R1,R1,01
+BNE R1,R0,01
+J xstartofstate1 //STATE1
+SUB R1,R1,R1
+ADDI R1,R1,02
+BNE R1,R0,01
+J xstartofstate2 //STATE2
+SUB R1,R1,R1
+ADDI R1,R1,03
+BNE R1,R0,01
+J xstartofstate3 //STATE3
+SUB R6,R6,R6
+ADDI R6,R6,31
+ADDI R6,R6,20//R6=51
+SUB R1,R1,R1
+SW R1,R6     //FALSE STATE THEN STORE 0 TO STATE
+J xcheckflag
+////////////   STATE0     ///////////////
+xstartofstate0:SUB R4,R4,R4  
+ADDI R4,R4,15  //BTL3 ONES 3LA KOL EL ROWS
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4 
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+OUT R4
+IN R3 //INPUT FROM COLUMNS TO SEE IF THERE IS ANY ONE ONE ANY OF THEM 
+SUB R5,R5,R5
+BNE R3,R5,06// IF R5!=R3 MEANS  KEY IS PRESSED
+SUB R6,R6,R6
+ADDI R6,R6,31
+ADDI R6,R6,20 //R6=51
+SUB R0,R0,R0
+SW R0,R6///  STATE=0
+J xendofstate0
+SUB R2,R2,R2 //  PUT IN THE ROW COUNTER FIRST ROW 
+SUB R4,R4,R4  //  BTA2KD EN EL REG B ZERO FE EL AWL
+ADDI R4,R4,01  //BTL3 ONE 3LA AWL ROW
+//SLL AS WE WANT IT TO BE IN THE 4 MOST SIGNIFICANT BITS//
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4 
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+SLL R4,R4
+OUT R4
+IN R3 //INPUT FROM COLUMNS TO SEE IF THERE IS ANY ONE ONE ANY OF THEM
+SUB R5,R5,R5
+BEQ R3,R5,20// IF R5=R3 MEANS NO KEY IS PRESSED IN THIS ROW ,THEN BRANCH
+// ROW IS FOUND//
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,21   //R6=52
+SW R4,R6      ///STORE ROW_SCAN_BYTE
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,22   //R6=53
+SW R3,R6     // STORE COL_SCAN_BYTE 
+SUB R0,R0,R0
+ADDI R0,R0,01/// R0=1
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,20   //R6=51
+SW R0,R6   //STATE=01
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,23   //R6=54
+SW R2,R6 //STORE ROW_NUM
+J xendofstate0 
+ADDI R2,R2,01
+SLL R4,R4
+OUT R4
+IN R3 //INPUT FROM COLUMNS TO SEE IF THERE IS ANY ONE ONE ANY OF THEM
+SUB R5,R5,R5
+BEQ R3,R5,20// IF R5=R3 MEANS NO KEY IS PRESSED IN THIS ROW ,THEN BRANCH
+// ROW IS FOUND//
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,21   //R6=52
+SW R4,R6      ///STORE ROE_SCAN_BYTE
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,22   //R6=53
+SW R3,R6     // STORE COL_SCAN_BYTE 
+SUB R0,R0,R0
+ADDI R0,R0,01/// R0=1
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,20   //R6=51
+SW R0,R6   //STATE=01
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,23   //R6=54
+SW R2,R6 //STORE ROW_NUM
+J xendofstate0 
+ADDI R2,R2,01
+SLL R4,R4
+OUT R4
+IN R3 //INPUT FROM COLUMNS TO SEE IF THERE IS ANY ONE ONE ANY OF THEM
+SUB R5,R5,R5
+BEQ R3,R5,20// IF R5=R3 MEANS NO KEY IS PRESSED IN THIS ROW ,THEN BRANCH
+// ROW IS FOUND//
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,21   //R6=52
+SW R4,R6      ///STORE ROE_SCAN_BYTE
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,22   //R6=53
+SW R3,R6     // STORE COL_SCAN_BYTE 
+SUB R0,R0,R0
+ADDI R0,R0,01/// R0=1
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,20   //R6=51
+SW R0,R6   //STATE=01
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,23   //R6=54
+SW R2,R6 //STORE ROW_NUM
+J xendofstate0 
+ADDI R2,R2,01
+SLL R4,R4
+OUT R4
+IN R3 //INPUT FROM COLUMNS TO SEE IF THERE IS ANY ONE ONE ANY OF THEM
+SUB R5,R5,R5
+BEQ R3,R5,19// IF R5=R3 MEANS NO KEY IS PRESSED IN THIS ROW ,THEN BRANCH
+// ROW IS FOUND//
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,21   //R6=52
+SW R4,R6      ///STORE ROW_SCAN_BYTE
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,22   //R6=53
+SW R3,R6     // STORE COL_SCAN_BYTE 
+SUB R0,R0,R0
+ADDI R0,R0,01/// R0=1
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,20   //R6=51
+SW R0,R6   //STATE=01
+SUB R6,R6,R6
+ADDI R6,R6,31   //R6=31
+ADDI R6,R6,23   //R6=54
+SW R2,R6 //STORE ROW_NUM
+xendofstate0:J xcheckflag
+/////////                 STATE 1           /////////
+/////////////     DELAY   ////////////
+SUB R0,R0,R0
+ADDI R0,R0,15//R0=000F
+SLL R1,R0
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1///R1=00F0
+OR R0,R0,R1//R0=00FF
+SLL R1,R0
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1///R1=FF00
+OR R0,R0,R1//R0=FFFF
+ADDI R1,R0,00 //R1=FFFF
+SUB R2,R2,R2
+ADDI R2,R2,04 //R2=04
+SUB R4,R4,R4
+ADDI R4,R4,01///R4=1
+xloop:SUB R3,R3,R3//R3=0
+BEQ R0,R3,02
+SUB R0,R0,R4///R0--
+J xloop
+BEQ R2,R3,04
+ADD R0,R0,R1///R0=FFFF  AGAIN
+SUB R2,R2,R4//R2--
+J xloop
+///////  GETTING ROW_SCAN_BYTE & COL_SCAN_BYTE  //////////
+xstartofstate1:SUB R6,R6,R6
+ADDI R6,R6,31  ///R6=31
+ADDI R6,R6,21  // R6=52
+LW R0,R6    /// R0=ROW_SCAN_BYTE
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,22    //R6=53
+LW R1,R6   /// R1=COL_SCAN_BYTE                             
+/////////                     CHECKING THE KEY IF STILL PRESSED OR HAS BEEN RELEASED           ///////
+OUT R0
+IN R3
+///  WE WILL SEE IF R3(INPUT OF MIPS)  EQUAL COL_SCAN_BYTE TO MAKE SURE SAME KEY IS STILL PRESSED ///
+BEQ R1,R3,07 //IF R1=R3 THEN KEY IS STILL PRESSED THEN BRANCH
+/// KEY IS RELEASED ///
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,20 //R6=51
+SUB R4,R4,R4 
+SW R4,R6  ///STATE=0
+J xendofstate1
+///KEY IS PRESSED//
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,20 //R6=51
+SUB R4,R4,R4
+ADDI R4,R4,02 
+SW R4,R6  ///STATE=2
+SUB R5,R5,R5
+ADDI R5,R5,08
+BNE R5,R1,07
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,24 //R6=55
+SUB R4,R4,R4
+ADDI R4,R4,00
+SW R4,R6 //COL_NUM=0
+J xcalculatethekey
+SRL R5,R5
+BNE R5,R1,07
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,24 //R6=55
+SUB R4,R4,R4
+ADDI R4,R4,01
+SW R4,R6 //COL_NUM=1
+J xcalculatethekey
+SRL R5,R5
+BNE R5,R1,07
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,24 //R6=55
+SUB R4,R4,R4
+ADDI R4,R4,02
+SW R4,R6 //COL_NUM=2
+J xcalculatethekey
+SRL R5,R5
+BNE R5,R1,06
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,24 //R6=55
+SUB R4,R4,R4
+ADDI R4,R4,03
+SW R4,R6 //COL_NUM=3
+xcalculatethekey:SUB R6,R6,R6
+ADDI R6,R6,31
+ADDI R6,R6,23////R6=54
+LW R5,R6///R5=ROW_NUM
+SLL R0,R5
+SLL R0,R0
+ADD R0,R0,R4
+ADDI R0,R0,01//R0=PRESSED_KEY
+SUB R6,R6,R6
+ADDI R6,R6,31
+ADDI R6,R6,25//R6=56
+SW R0,R6 
+SUB R6,R6,R6
+ADDI R6,R6,09 ////R6=09
+SUB R0,R0,R0
+ADDI R0,R0,01
+SW R0,R6 ////READFLAG=01
+xendofstate1:J xcheckflag 
+/////////                 STATE 2            /////////
+///////  GETTING ROW_SCAN_BYTE & COL_SCAN_BYTE  //////////
+xstartofstate2:SUB R6,R6,R6
+ADDI R6,R6,31  ///R6=31
+ADDI R6,R6,21  // R6=52
+LW R0,R6    /// R0=ROW_SCAN_BYTE
+SUB R6,R6,R6
+ADDI R6,R6,31  //R6=31
+ADDI R6,R6,22    //R6=53
+LW R1,R6   /// R1=COL_SCAN_BYTE
+/////////                     CHECKING THE KEY IF STILL PRESSED OR HAS BEEN RELEASED           ///////
+OUT R0
+IN R3
+///  WE WILL SEE IF R3(INPUT OF MIPS)  EQUAL COL_SCAN_BYTE TO MAKE SURE SAME KEY IS STILL PRESSED ///
+BEQ R1,R3,08 //IF R1=R3 THEN KEY IS STILL PRESSED THEN BRANCH
+/// KEY IS RELEASED ///
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,20 //R6=51
+SUB R4,R4,R4
+ADDI R4,R4,03 
+SW R4,R6  ///STATE=3
+J xendofstate2
+///KEY IS STILL PRESSED//
+SUB R6,R6,R6
+ADDI R6,R6,31 //R6=31
+ADDI R6,R6,20 //R6=51
+SUB R4,R4,R4
+ADDI R4,R4,02 
+SW R4,R6  ///STATE=2
+SUB R6,R6,R6
+ADDI R6,R6,09///R6=9
+SUB R0,R0,R0
+ADDI R0,R0,01
+SW R0,R6 ///READFLAG=1
+xendofstate2:J xcheckflag
+/////////////       state 3    /////////// 
+/////////////     DELAY   ////////////
+SUB R0,R0,R0
+ADDI R0,R0,15//R0=000F
+SLL R1,R0
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1///R1=00F0
+OR R0,R0,R1//R0=00FF
+SLL R1,R0
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1
+SLL R1,R1///R1=FF00
+OR R0,R0,R1//R0=FFFF
+ADDI R1,R0,00 //R1=FFFF
+SUB R2,R2,R2
+ADDI R2,R2,04 //R2=04
+SUB R4,R4,R4
+ADDI R4,R4,01///R4=1
+xloop:SUB R3,R3,R3//R3=0
+BEQ R0,R3,02
+SUB R0,R0,R4///R0--
+J xloop
+BEQ R2,R3,04
+ADD R0,R0,R1///R0=FFFF  AGAIN
+SUB R2,R2,R4//R2--
+J xloop
+//getting the row scan byte 
+xstartofstate3:SUB R6,R6,R6  //ADD 0 IN R6 
+ADDI R6,R6,31  // R6=31 
+ADDI R6,R6,21 // R6=52 
+LW R0,R6 // R0 = ROW SCAN BYTE 
+//getting the COL scan byte 
+SUB R6,R6,R6  //ADD 0 IN R6 
+ADDI R6,R6,31  // R6=31 
+ADDI R6,R6,22 // R6=53 
+LW R1,R6 // R1 = COL SCAN BYTE
+OUT R0 // Out the row scan byte 
+IN R3 
+BEQ R1,R3,06   // IF EQUAL THEN THE KEY IS STILL PRESSED AND WE BACK TO STATE 2 IF NOT EQUAL THEN THE KEY IS RELEASED SO WE BACK TO STATE 0 
+SUB R6,R6,R6
+ADDI R6,R6,31 
+ADDI R6,R6,20  // R6 = 51 Which is address of the state 
+SUB R4,R4,R4
+SW R4,R6 // STATE =0
+J xendofstate3 
+SUB R6,R6,R6
+ADDI R6,R6,31 
+ADDI R6,R6,20
+SUB R4,R4,R4
+ADDI R4,R4,02
+SW R4,R6 // STATE =2  
+xendofstate3:J xcheckflag
+/////////////// ENCODING THE PRESSED KEY /////////////
+xstartofdecoding:SUB R6,R6,R6
+ADDI R6,R6,31
+ADDI R6,R6,25//R6=56
+LW R0,R6///R0=KEY_PRESSED
+SUB R6,R6,R6
+ADDI R6,R6,08//R6=08
+SUB R1,R1,R1
+ADDI R1,R1,01///R1=0001 
+SUB R2,R2,R2
+ADDI R2,R2,01//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0001
+J xendofkeypad
+SLL R1,R1 ///R1=0002
+SUB R2,R2,R2
+ADDI R2,R2,02//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0002
+J xendofkeypad
+SLL R1,R1 ///R1=0004
+SUB R2,R2,R2
+ADDI R2,R2,03//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0004
+J xendofkeypad
+SLL R1,R1 ///R1=0008
+SUB R2,R2,R2
+ADDI R2,R2,05//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0008
+J xendofkeypad
+SLL R1,R1 ///R1=0010
+SUB R2,R2,R2
+ADDI R2,R2,06//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0010
+J xendofkeypad
+SLL R1,R1 ///R1=0020
+SUB R2,R2,R2
+ADDI R2,R2,07//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0020
+J xendofkeypad
+SLL R1,R1 ///R1=0040
+SUB R2,R2,R2
+ADDI R2,R2,09//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0040
+J xendofkeypad
+SLL R1,R1 ///R1=0080
+SUB R2,R2,R2
+ADDI R2,R2,10//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0080
+J xendofkeypad
+SLL R1,R1 ///R1=0100
+SUB R2,R2,R2
+ADDI R2,R2,11//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0100
+J xendofkeypad
+SLL R1,R1 ///R1=0200
+SUB R2,R2,R2
+ADDI R2,R2,14//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0200
+J xendofkeypad
+SLL R1,R1 ///R1=0400
+SUB R2,R2,R2
+ADDI R2,R2,04//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0400
+J xendofkeypad
+SLL R1,R1 ///R1=0800
+SLL R1,R1///R1=1000
+SLL R1,R1///R1=2000
+SLL R1,R1///R1=4000
+SLL R1,R1///R1=8000
+SUB R2,R2,R2
+ADDI R2,R2,15//R2=DECODE KEY
+BNE R0,R2,02
+SW R1,R6///DECODING=0001
+J xendofkeypad
+SUB R6,R6,R6
+ADDI R6,R6,09
+SUB R3,R3,R3
+SW R3,R6///RF=0
+J xcheckflag
+///////////////////////////                   POPING THE REGISTERS        //////////////////////////////////////////    
+xendofkeypad:SUB R6,R6,R6  
+LW R0,R6
+//POPING RO IN THE RAM (R6=0) 
+ADDI R6,R6,01 
+LW R1,R6 
+//POPING R1 IN THE RAM (R6=1)
+ADDI R6,R6,01  
+LW R2,R6 
+//POPING R2 IN THE RAM (R6=2)
+ADDI R6,R6,01  
+LW R3,R6 
+//POPING R3 IN THE RAM (R6=3)
+ADDI R6,R6,01  
+LW R4,R6 
+//POPING R4 IN THE RAM (R6=4)
+ADDI R6,R6,01  
+LW R5,R6 
+//POPING R5 IN THE RAM (R6=5)
+JR R7
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+// FUNCTION : SENDING DATA TO LCD
+// REGISTERS USED : R1,R2,R3,R4,R5,R6(FOR ADRESSES)
+// MEMORY ADRESSES USED : 0,1,2,3,4,5 (FOR PUSHING REGISTERS) AND 12 (FOR LOADING DATA)
+// NUMBER OF DELAYS : 4 DELAYS (TOTAL TIME OF DELAY : 4MS)
+//
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+xSENDDATA: NOP
+// //////////////////////////////////////   PUSHING THE REGISTERS  //////////////////////////////////////////////
+//
+//   
+SUB R6,R6,R6  
+SW R0,R6
+// ----PUSHING RO IN THE RAM (R6=0)---- 
+ADDI R6,R6,01 
+SW R1,R6 
+// ----PUSHING R1 IN THE RAM (R6=1)----
+ADDI R6,R6,01  
+SW R2,R6 
+// ----PUSHING R2 IN THE RAM (R6=2)----
+ADDI R6,R6,01  
+SW R3,R6 
+// ----PUSHING R3 IN THE RAM (R6=3)----
+ADDI R6,R6,01  
+SW R4,R6 
+// ----PUSHING R4 IN THE RAM (R6=4)----
+ADDI R6,R6,01  
+SW R5,R6 
+// ----PUSHING R5 IN THE RAM (R6=5)----
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+// //////////////////////////////////////////// PUTTING RS = 1 /////////////////////////////////////////////////
+//
+//
+SUB R1,R1,R1  
+// ---- R1=0 ---- 
+ADDI R1,R1,01
+// ---- R1=1 ----
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+// ---- R1=100000000 (BIT(9) = 1 FOR (RS) ) ----
+OUT R1 
+// ---- (RS) IN OUTPUT PORT = 1 ----
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING LCD ENABLE = 1 //////////////////////////////////
+//
+//
+SUB R2,R2,R2  
+// ---- R2=0 ---- 
+ADDI R2,R2,01
+// ---- R2=1 ----
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2 
+SLL R2,R2
+// ---- R2=100000000 (BIT(8) = 1 FOR (LCD ENABLE) ) ----
+OR R1,R2,R1
+// ---- R1=1100000000 (BIT(8) (LCD ENABLE), BIT(9) (RS) EQUALS 1 )
+OUT R1
+// ---- (RS), (LCD ENABLE) IN OUTPUT PORT EQUALS 1 ----
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING DATA IN OUTPUT PORT /////////////////////////////
+//
+//
+SUB R6,R6,R6 
+ADDI R6,R6,12
+// ---- PUTTING THE ADRESS OF DATA (12) IN RAM IN R6 ---- 
+SUB R2,R2,R2 
+LW R2,R6
+// ---- LOADING DATA FROM RAM TO R2 ----
+OR R1,R2,R1 
+// ---- PUTTING THE DATA IN R1 ----
+OUT R1 
+// ---- (RS) (BIT 9) , (LCD ENABLE) (BIT 8) EQUALS 1 , AND DATA D7....D0 IS ON OUTPUTPORT ----
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING LCD ENABLE = 0 //////////////////////////////////
+//
+//
+SUB R2,R2,R2 
+ADDI R2,R2,23
+// ---- R2= 0000000000010111 ----
+SLL R2,R2
+SLL R2,R2
+SLL R2,R2
+SLL R2,R2
+SLL R2,R2
+// ---- R2 = 0000001011100000 ----
+SUB R3,R3,R3
+ADDI R3,R3,31
+// ---- R3 = 0000000000011111 ----
+OR R2,R3,R2
+// ---- R2 = 0000001011100000 ----
+//                OR
+// ---- R3 = 0000000000011111 ----
+// ---- R2 = 0000001011111111 ----
+// ---- R2 HAS THE VALUE 0000001011111111 (TO KEEP THE VALUE OF (DATA) AND (RS) AND MAKE (LCD ENABLE) EQUALS ZERO )
+AND R1,R1,R2
+// ----NOW (LCD ENABLE = 0) AND (RS) AND (DATA) IS KEPT SAFE ----
+OUT R1
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  POPPING REGISTERS ///////////////////////////////////////
+//
+//
+SUB R6,R6,R6  
+LW R0,R6
+// ----POPING RO IN THE RAM (R6=0)----
+ADDI R6,R6,01 
+LW R1,R6 
+// ----POPING R1 IN THE RAM (R6=1)----
+ADDI R6,R6,01  
+LW R2,R6 
+// ----POPING R2 IN THE RAM (R6=2)----
+ADDI R6,R6,01  
+LW R3,R6 
+// ----POPING R3 IN THE RAM (R6=3)----
+ADDI R6,R6,01  
+LW R4,R6 
+// ----POPING R4 IN THE RAM (R6=4)----
+ADDI R6,R6,01  
+LW R5,R6 
+// ---POPING R5 IN THE RAM (R6=5)----
+JR R7
+
+// FUNCTION : SENDING COMMAND TO LCD
+// REGISTERS USED : R1,R2,R3,R4,R5,R6(FOR ADRESSES)
+// MEMORY ADRESSES USED : 0,1,2,3,4,5 (FOR PUSHING REGISTERS) AND 13 (FOR LOADING COMMAND)
+// NUMBER OF DELAYS : 4 DELAYS (TOTAL TIME OF DELAY : 4MS)
+//
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+xSENDCMD: NOP
+// //////////////////////////////////////   PUSHING THE REGISTERS  //////////////////////////////////////////////
+//
+//   
+SUB R6,R6,R6  
+SW R0,R6
+// ----PUSHING RO IN THE RAM (R6=0)---- 
+ADDI R6,R6,01 
+SW R1,R6 
+// ----PUSHING R1 IN THE RAM (R6=1)----
+ADDI R6,R6,01  
+SW R2,R6 
+// ----PUSHING R2 IN THE RAM (R6=2)----
+ADDI R6,R6,01  
+SW R3,R6 
+// ----PUSHING R3 IN THE RAM (R6=3)----
+ADDI R6,R6,01  
+SW R4,R6 
+// ----PUSHING R4 IN THE RAM (R6=4)----
+ADDI R6,R6,01  
+SW R5,R6 
+// ----PUSHING R5 IN THE RAM (R6=5)----
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+// //////////////////////////////////////////// PUTTING RS = 0 /////////////////////////////////////////////////
+//
+//
+SUB R1,R1,R1  
+// --- R1=0 ---- 
+OUT R1 
+// ----(RS) IN OUTPUT PORT EQUALS 0 ---- 
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING LCD ENABLE = 1 //////////////////////////////////
+//
+//
+ADDI R1,R1,01
+// ---- R1=1 ----
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1 
+SLL R1,R1
+// ---- R1=100000000 ( BIT 8 (LCD ENABLE) EQUALS 1 (RS) EQUALS ZERO ) ----
+OUT R1
+// ---- (RS)=0 , (LCD ENABLE) IN OUTPUT PORT EQUALS 1 
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING COMMAND IN OUTPUT PORT /////////////////////////////
+//
+//
+SUB R6,R6,R6 
+ADDI R6,R6,13
+// ---PUTTING THE ADRESS OF COMMAND (13) IN RAM IN R6---- 
+SUB R2,R2,R2 
+LW R2,R6
+// ----LOADING COMMAND FROM RAM TO R2----
+OR R1,R2,R1 
+// ----PUTTING THE COMMAND IN R1----
+OUT R1 
+// ----(RS) (BIT 9) = 0 , (LCD ENABLE) (BIT 8) = 1 , AND COMMAND D7....D0  ON OUTPUTPORT----
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  PUTTING LCD ENABLE = 0 //////////////////////////////////
+//
+//
+SUB R2,R2,R2 
+ADDI R2,R2,31 
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,07
+// ----R2=0000000011111111----
+// ----R2 HAS THE VALUE 0000000011111111 (TO KEEP THE VALUE OF COMMAND AND (RS)(ZERO) AND MAKE (LCD ENABLE)=0 )----
+// ----R2 EQUALS 255 DECIMAL----
+AND R1,R1,R2 
+// ----MASKING R1,R2 WILL BE DONE TO KEEP THE VALUES OF THE OUTPUT PORT AND MAKE THE (LCD ENABLE) EQUAL ZERO 
+OUT R1
+// ----NOW (LCD ENABLE) EQUAL ZERO AND THE COMMAND IS KEPT SAFE----
+//
+//
+// //////////////////////////////////////   DELAY 1MS  //////////////////////////////////////////////
+SUB R3,R3,R3
+ADDI R3,R3,31
+// R3 = 0000000000011111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0000001111100000
+ORI R3,R3,31
+// R3 = 0000001111111111
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+SLL R3,R3
+// R3 = 0011111111110000 (DECIMAL = 16368)
+SUB R4,R4,R4
+SUB R5,R5,R5
+ADDI R5,R5,01
+// R5 = 1
+xLOOP: BEQ R3,R4,02
+SUB R3,R3,R5
+// R3--
+J xLOOP
+// DELAY = 16368  * 3 (INSTRUCTIONS)(BEQ,SUB,JUMP) * 20*10^-6 = 0.98 MS
+//
+//
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+// //////////////////////////////////////  POPPING REGISTERS ///////////////////////////////////////
+//
+//
+SUB R6,R6,R6  
+LW R0,R6
+// ----POPING RO IN THE RAM (R6=0)----
+ADDI R6,R6,01 
+LW R1,R6 
+// ----POPING R1 IN THE RAM (R6=1)----
+ADDI R6,R6,01  
+LW R2,R6 
+// ----POPING R2 IN THE RAM (R6=2)----
+ADDI R6,R6,01  
+LW R3,R6 
+// ----POPING R3 IN THE RAM (R6=3)----
+ADDI R6,R6,01  
+LW R4,R6 
+// ----POPING R4 IN THE RAM (R6=4)----
+ADDI R6,R6,01  
+LW R5,R6 
+// ---POPING R5 IN THE RAM (R6=5)----
+JR R7
+
+// This segment get the result from Ram14 then seperates it into 5 digits and prints them to the bottom right of the LCD
+//Instead of dividing by 10, we calculate the remainder first by multiplying by approx 0.9 using a series of SLL(multiplying by 2) and SRL(dividing by 2)
+//----THIS SEGMENT WILL CHANGE R0~4 VALUES AND WILL NOT RETURN THEM TO THEIR INITIAL VALUES-----
+//----INSTEAD R0-R4 WILL RETURN WITH ZERO VALUES----
+//Used Ram14-result , Ram12-data , Ram13-command , Ram0~7- Push and Pop registers
+//Used R0,R1,R2,R3,R4 in calculations and R6 to access the RAM
+//Total delays of 10 LCD calls (40 ms), no local delays used
+//This segment intializes the LCD
+//We select the 8 bit mode of communtcation with the LCD with 2 rows
+//We disable the cursor then clear the LCD to be ready to receive data and commands
+//Push and pop R0,R7 only
+//Used R0 in calculations and R6 to access the RAM
+//Total delays of 3 LCD calls (12ms), no local delays used
+
+xLCDINIT: NOP
+//Pushing R0
+SUB R6,R6,R6
+SW R0,R6
+//Pushing R7
+SUB R6,R6,R6
+ADDI R6,R6,07
+SW R7,R6
+//
+//Choosing Two lines, Eight bit mode is done with the command 56
+//
+//R0 = 56
+SUB R0,R0,R0
+ADDI R0,R0,30
+ADDI R0,R0,26
+//Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+//--------------------------CALL LCD COMMAND -----------------------------------
+JAL xSendCmd
+//
+//Turning the cursor off is done with command 12
+//To turn on the cursor replace this with command 14
+//
+//R0 = 12
+SUB R0,R0,R0
+ADDI R0,R0,12
+//Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+//--------------------------CALL LCD COMMAND -----------------------------------
+JAL xSendCmd
+//
+//Clearing the LCD is done with command 1
+//
+//R0 = 1
+SUB R0,R0,R0
+ADDI R0,R0,01
+//Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R0,R6
+//--------------------------CALL LCD COMMAND -----------------------------------
+JAL xSendCmd
+//
+//LCD is fully initiallized 
+//Popping R0
+SUB R6,R6,R6
+LW R0,R6
+//Popping R7
+SUB R6,R6,R6
+ADDI R6,R6,07
+LW R7,R6
+
+//Return to main
+JR R7
+
+xDISPLAYRESULT: NOP
+//Push R7 only, Needs to be pushed so its value can be retained to return to main after execution
+SUB R6,R6,R6
+ADDI R6,R6,07
+SW R7,R6
+
+//Clearing R0~6 except R5
+SUB R0,R0,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+SUB R4,R4,R4
+SUB R6,R6,R6
+
+//Get result from Ram14 in R0
+ADDI R6,R6,14
+LW R0,R6
+//save result in R4 too
+ADD R4,R4,R0
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 16 and repeat the whole code 4 more times
+// row 2 col 16 is command 207 :(
+//
+//R2 = 207
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,21
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          FIRST DIVISION IS DONE				 	//
+//			    1 number is displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+// Put the result of division in R0 and R4, from R1 and repeat the whole division 3 times but print in 206~203
+SUB R4,R4,R4
+ADD R4,R1,R4
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//
+//
+//Now repeating the division -- 2nd time
+//
+//
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 15 and repeat the whole code 4 more times
+// row 2 col 16 is command 206 
+//
+//R2 = 206
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,20
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          SECOND DIVISION IS DONE				 	//
+//			    2 numbers are displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//  Put the result of division in R0 and R4, from R1 and repeat the whole division 2 more times but print in 205~203
+SUB R4,R4,R4
+ADD R4,R1,R4
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//
+//
+//Now repeating the division -- 3rd time
+//
+//
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+LW R0,R6
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 14 and repeat the code 2 more times
+// row 2 col 16 is command 206 
+//
+//R2 = 205
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,19
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//  Put the result of division in R0 and R4, from R1 and repeat the whole division 3 more times but print in 205~203
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          THIRED DIVISION IS DONE				 	//
+//			    3 numbers are displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//  Put the result of division in R0 and R4, from R1 and repeat the whole division 1 more time but print in 204~203
+SUB R4,R4,R4
+ADD R4,R1,R4
+SUB R0,R0,R0
+ADD R0,R1,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+//
+//
+//Now repeating the division -- 4th time
+//
+//
+//R0 = n , R1 = q
+//R0 = n>>1
+SRL R0,R0
+//R1 = n>>1
+ADD R1,R1,R0
+//R0 = n>>2
+SRL R0,R0
+//R1 = n>>1 + n>>2 = q
+ADD R1,R1,R0
+//R2 = q
+SUB R2,R2,R2
+ADD R2,R1,R2
+//R1 = q>>4
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>4 = q
+ADD R2,R2,R1
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R1 = q>>8
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+SRL R1,R1
+//R2 = q + q>>8 = q
+ADD R2,R2,R1
+//R2 = q >> 3 = q
+SRL R2,R2 
+SRL R2,R2
+SRL R2,R2
+//R1 = q
+SUB R1,R1,R1
+ADD R1,R2,R1
+//R2 = q<<2
+SLL R2,R2
+SLL R2,R2
+//R2 = q<<2 + q
+ADD R2,R1,R2
+// R2 = (q<<2 + q) << 1
+SLL R2,R2
+//R0 = result
+SUB R0,R0,R0
+ADD R0,R0,R4
+LW R0,R6
+//R2 = result - ((q<<2) + q) << 1) = r
+SUB R2,R0,R2
+//R3 = r
+SUB R3,R3,R3
+ADD R3,R2,R3
+//R3 = r+6
+ADDI R3,R3,06
+//R3 = (r+6)>>4
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+SRL R3,R3
+//R1 = q + ((r+6)>>4) = q DIVISION RESULT
+ADD R1,R1,R3
+//R0 = result - 10*q      DIVISION REMAINDER
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+SUB R0,R0,R1
+//
+//Now the divion result is in R1 and the remainder is in R0
+//we will print the remainder in row 2 col 13
+// row 2 col 13 is command 204 
+//
+//R2 = 204
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,18
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R0 to ascii by adding 0x30 = 48
+ADDI R0,R0,30
+ADDI R0,R0,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R0,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          FOURTH DIVISION IS DONE				 	//
+//			    4 numbers are displayed					//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//Now the last digit to print is the result of dividing by 10 for 4 times, dividing by 10,000, which is stored in R1
+//Print in row 2 col 12 
+//R2 = 203
+SUB R2,R2,R2
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,31
+ADDI R2,R2,17
+// Store in Ram13-command
+SUB R6,R6,R6
+ADDI R6,R6,13
+SW R2,R6
+//-----------------------------------------------CALL LCD COMMAND ---------------------------------------------
+JAL xSENDCMD
+//Change R1 to ascii
+ADDI R1,R1,30
+ADDI R1,R1,18
+// Store in Ram12-data
+SUB R6,R6,R6
+ADDI R6,R6,12
+SW R1,R6
+//------------------------------------------------CALL LCD DATA---------------------------------------------
+JAL xSENDDATA
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//                          	5 Numbers are displayed				 	//
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//Clearing the values of R0~4
+SUB R0,R0,R0
+SUB R1,R1,R1
+SUB R2,R2,R2
+SUB R3,R3,R3
+SUB R4,R4,R4
+
+//Pop R7 to return to main
+SUB R6,R6,R6
+ADDI R6,R6,07
+LW R7,R6
+
+//return back to main
+JR R7

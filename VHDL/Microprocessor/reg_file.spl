@@ -1,0 +1,12 @@
+[Inputs]
+Write_enable
+clk
+reset
+=Read_register1[2:0]=
+=Read_register2[2:0]=
+=Write_register[2:0]=
+=Data_in[15:0]=
+[Outputs]
+=Read_Data1[15:0]=
+=Read_data2[15:0]=
+[BiDir]

@@ -1,0 +1,17 @@
+PROMGEN: Xilinx Prom Generator P.20131013
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+
+promgen -w -p mcs -c FF -o C:\Users\Tefa\Desktop\final_design\Microprocessor//Keu_pad_test -s 4096 -u 0000 C:/Users/Tefa/Desktop/final_design/Microprocessor/microprocessor.bit -spi 
+
+PROM C:\Users\Tefa\Desktop\final_design\Microprocessor\Keu_pad_test.prm map: Wed Apr 24 16:54:01 2019
+
+Calculating PROM checksum with fill value ff
+
+Format        Mcs86 (32-bit)
+Size          4096K
+PROM start    0000:0000
+PROM end      003f:ffff
+PROM checksum 3ab00d18
+
+        Addr1        Addr2                     Date File(s)
+    0000:0000    0005:327b     Apr 24 16:34:44 2019 C:/Users/Tefa/Desktop/final_design/Microprocessor/microprocessor.bit
